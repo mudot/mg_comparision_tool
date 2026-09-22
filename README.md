@@ -20,7 +20,7 @@ Ideal for players and guilds who want to track ranking evolution accurately and 
 ## ✨ Features
 
 ### 📊 Real-Time Comparison
-- Detects changes in **Preciosidades** (Rares), **Gold**, **Ancestrais**, **Victories**, and **Defeats**
+- Detects changes in **Loots**, **Gold**, **Ancestrals**, **Victories**, and **Defeats**
 - Calculates position variation (up / down / stable)
 - Highlights new players in the range
 - Smart sorting by relevance of changes
