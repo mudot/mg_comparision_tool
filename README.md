@@ -1,124 +1,124 @@
-# MonstersGame — Comparador de Highscore
+# MonstersGame — Highscore Comparator
 
 [![Tampermonkey](https://img.shields.io/badge/Tampermonkey-Userscript-blue?logo=tampermonkey)](https://www.tampermonkey.net/)
 [![Version](https://img.shields.io/badge/version-4.2.5-brightgreen)]()
 [![License](https://img.shields.io/badge/license-MIT-green)]()
 [![Platform](https://img.shields.io/badge/platform-Browser%20RPG-orange)]()
 
-Userscript avançado para o jogo de browser **MonstersGame** (moonid.net) que transforma a página de Highscore em um sistema completo de monitoramento, comparação e histórico de mudanças.
+An advanced userscript for the browser RPG **MonstersGame** (moonid.net) that turns the Highscore page into a complete monitoring, comparison, and history system.
 
 ---
 
-## 📌 Sobre o Projeto
+## 📌 About the Project
 
-O **Comparador de Highscore** detecta automaticamente alterações nas estatísticas dos jogadores sempre que a página de ranking é acessada. Ele compara o estado atual com o último snapshot válido (respeitando um intervalo mínimo de ~55 minutos), gera um painel visual com as mudanças, salva o histórico localmente via IndexedDB e produz snapshots de alta resolução enviados automaticamente para o ImgBB.
+The **Highscore Comparator** automatically detects changes in player statistics every time the ranking page is visited. It compares the current state with the last valid snapshot (respecting a minimum interval of ~55 minutes), generates a visual panel with the changes, stores the history locally via IndexedDB, and produces high-resolution snapshots that are automatically uploaded to ImgBB.
 
-Ideal para jogadores e guildas que desejam acompanhar a evolução do ranking de forma precisa e visual.
+Ideal for players and guilds who want to track ranking evolution accurately and visually.
 
 ---
 
-## ✨ Funcionalidades
+## ✨ Features
 
-### 📊 Comparação em Tempo Real
-- Detecta mudanças em **Preciosidades**, **Ouro**, **Ancestrais**, **Vitórias** e **Derrotas**
-- Calcula variação de posição (subiu / caiu / estável)
-- Destaca jogadores novos na faixa
-- Ordenação inteligente por relevância das mudanças
+### 📊 Real-Time Comparison
+- Detects changes in **Preciosidades** (Rares), **Gold**, **Ancestrais**, **Victories**, and **Defeats**
+- Calculates position variation (up / down / stable)
+- Highlights new players in the range
+- Smart sorting by relevance of changes
 
-### 📋 Painel de Dados
-- Exibe as 20 principais alterações da faixa atual
-- Tooltips com descrição completa de cada indicador
-- Contadores agregados (subiram, caíram, novos, totais de stats)
-- Clique em qualquer jogador para rolar até ele na tabela original
-- Botão flutuante de retorno ao painel
+### 📋 Data Panel
+- Displays the top 20 changes for the current range
+- Tooltips with full descriptions for each indicator
+- Aggregate counters (rose, fell, new players, total stats)
+- Click any player to scroll to them in the original table
+- Floating back-to-panel button
 
-### 🗄️ Histórico Persistente (IndexedDB)
-- Armazenamento local por servidor + faixa de posições
-- Até 60 snapshots por faixa
-- Intervalo mínimo de 55 minutos entre comparações
-- Dados permanecem entre sessões e recarregamentos
+### 🗄️ Persistent History (IndexedDB)
+- Local storage by server + position range
+- Up to 60 snapshots per range
+- Minimum 55-minute interval between comparisons
+- Data persists across sessions and page reloads
 
-### 🖼️ Snapshots de Alta Resolução
-- Geração de imagens em **3× escala** (até 8400×3300 px)
-- Dois tipos de snapshot:
-  - **Comparativo** — tabela detalhada com todas as variações
-  - **Painel** — visão resumida com totais e principais movimentações
-- Upload automático via Cloudflare Worker → ImgBB
-- URLs de alta qualidade, medium e thumbnail
+### 🖼️ High-Resolution Snapshots
+- Image generation at **3× scale** (up to 8400×3300 px)
+- Two snapshot types:
+  - **Comparison** — detailed table with all variations
+  - **Panel** — summary view with totals and top movements
+- Automatic upload via Cloudflare Worker → ImgBB
+- High-quality, medium, and thumbnail URLs
 
-### 🗂️ Álbum / Galeria
-- Visualização de todos os snapshots salvos
-- Abas: Comparativos · Painéis · Dados
-- Renomear e apagar snapshots
-- Preview em qualidade medium + abertura da imagem original em tamanho real
+### 🗂️ Album / Gallery
+- View all saved snapshots
+- Tabs: Comparisons · Panels · Data
+- Rename and delete snapshots
+- Medium-quality preview + open original full-size image
 
-### 🎛️ Barra de Ferramentas
-- Posicionamento com botões **🔼 / 🔽** (acima da tabela ou acima do painel)
-- Estado persistido em `localStorage`
-- Botões de acesso rápido: Álbum, Painel, Regenerar Imagens
-- Status de upload em tempo real
+### 🎛️ Tools Bar
+- Position control with **🔼 / 🔽** buttons (above the table or above the panel)
+- State persisted in `localStorage`
+- Quick-access buttons: Album, Panel, Regenerate Images
+- Real-time upload status
 
 ### 📱 Interface & UX
-- Tema escuro alinhado à estética do MonstersGame
-- Minimização do painel
-- Totalmente responsivo (desktop, tablet e mobile)
-- Sem barra de rolagem lateral indesejada
-- Compatível com mouse e touchscreen
+- Dark theme matching MonstersGame aesthetics
+- Panel minimization
+- Fully responsive (desktop, tablet, and mobile)
+- No unwanted horizontal scrollbars
+- Mouse and touchscreen compatible
 
 ---
 
-## 🛠️ Tecnologias
+## 🛠️ Technologies
 
-| Tecnologia       | Uso                                      |
+| Technology       | Usage                                    |
 |------------------|------------------------------------------|
-| Tampermonkey     | Execução do userscript                   |
-| IndexedDB        | Persistência de histórico                |
-| SVG + Canvas     | Geração de imagens em alta resolução     |
-| Cloudflare Worker| Proxy de upload para ImgBB               |
-| ImgBB API        | Hospedagem das imagens                   |
-| CSS Grid / Flex  | Layout responsivo                        |
-| Pointer Events   | Interações de UI                         |
+| Tampermonkey     | Userscript execution                     |
+| IndexedDB        | History persistence                      |
+| SVG + Canvas     | High-resolution image generation         |
+| Cloudflare Worker| Upload proxy to ImgBB                    |
+| ImgBB API        | Image hosting                            |
+| CSS Grid / Flex  | Responsive layout                        |
+| Pointer Events   | UI interactions                          |
 
 ---
 
-## 📥 Instalação
+## 📥 Installation
 
-1. Instale a extensão **[Tampermonkey](https://www.tampermonkey.net/)** no seu navegador
-2. Crie um novo script
-3. Cole o conteúdo completo do arquivo `monstersgame-highscore-comparision.js`
-4. Salve e ative o script
-5. Acesse qualquer página de Highscore do MonstersGame
+1. Install the **[Tampermonkey](https://www.tampermonkey.net/)** extension in your browser
+2. Create a new script
+3. Paste the full content of `monstersgame-highscore-comparision.js`
+4. Save and enable the script
+5. Visit any Highscore page on MonstersGame
 
-O script é executado automaticamente (`@run-at document-end`).
-
----
-
-## 🚀 Como Usar
-
-1. Entre na página de **Highscore** do servidor desejado
-2. O painel de comparação e a barra de ferramentas aparecem automaticamente
-3. Aguarde pelo menos **1 hora** entre visitas à mesma faixa para gerar comparações
-4. Use a barra de ferramentas para:
-   - Mover a barra de posição
-   - Abrir o álbum de snapshots
-   - Regenerar as imagens
-5. Clique em um jogador no painel para ir até ele na tabela
-6. No álbum, clique na imagem para abrir a versão em alta resolução
+The script runs automatically (`@run-at document-end`).
 
 ---
 
-## 📁 Estrutura de Dados
+## 🚀 How to Use
 
-Cada snapshot armazenado contém:
+1. Open the **Highscore** page of the desired server
+2. The comparison panel and tools bar appear automatically
+3. Wait at least **1 hour** between visits to the same range to generate comparisons
+4. Use the tools bar to:
+   - Move the bar position
+   - Open the snapshot album
+   - Regenerate images
+5. Click a player in the panel to jump to them in the table
+6. In the album, click an image to open the full-resolution version
+
+---
+
+## 📁 Data Structure
+
+Each stored snapshot contains:
 
 ```json
 {
-  "id": "servidor|faixa|timestamp",
+  "id": "server|range|timestamp",
   "server": "hostname",
   "range": "1-50",
   "ts": 1790116650154,
-  "title": "Comparativo 22/09/2026 19:30",
-  "records": [ /* dados dos jogadores */ ],
+  "title": "Comparison 22/09/2026 19:30",
+  "records": [ /* player data */ ],
   "baselineTs": 1790110000000,
   "images": {
     "comparison": { "url": "...", "medium": "...", "thumbnail": "..." },
