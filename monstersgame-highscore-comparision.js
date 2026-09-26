@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         MonstersGame - Comparador de Highscore
 // @namespace    http://tampermonkey.net/
-// @version      4.2.5
-// @description  Comparador de Highscore com histórico IndexedDB, painel, álbum, snapshots e UI responsiva
+// @version      4.3.0
+// @description  Comparador de Highscore com histórico IndexedDB, painel, álbum, snapshots hi-res 3×, faixa estável e UI responsiva
 // @match        *://*.monstersgame.moonid.net/*
 // @grant        none
 // @run-at       document-end
@@ -26,7 +26,8 @@
         SNAPSHOT_SCALE: 3,
         COMPARISON_W: 2800,
         PANEL_W: 2400,
-        PANEL_H: 2000
+        PANEL_H: 2000,
+        RANGE_BUCKET: 100
     };
 
     const INDICATOR_HELP = {
@@ -136,9 +137,48 @@
         return Array.from(map.values()).sort((a, b) => a.pos - b.pos);
     }
 
-    function rangeKeyFor(records) {
+    function normalizeRangeToken(value) {
+        const m = String(value || '').trim().match(/^(\d+)\s*[-–—]\s*(\d+)$/);
+        if (!m) return null;
+        return `${parseInt(m[1], 10)}-${parseInt(m[2], 10)}`;
+    }
+
+    function rangeKeyFromFilter() {
+        const selects = document.querySelectorAll('select');
+        for (const sel of selects) {
+            const candidates = [];
+            if (sel.value) candidates.push(sel.value);
+            const opt = sel.options[sel.selectedIndex];
+            if (opt) {
+                candidates.push(opt.value || '');
+                candidates.push(opt.textContent || '');
+            }
+            for (const c of candidates) {
+                const normalized = normalizeRangeToken(c);
+                if (normalized) return normalized;
+            }
+        }
+
+        const params = new URLSearchParams(location.search);
+        for (const key of ['localidade', 'locality', 'fromto', 'range', 'hsrange', 'highscorefrom']) {
+            const normalized = normalizeRangeToken(params.get(key) || '');
+            if (normalized) return normalized;
+        }
+
+        return null;
+    }
+
+    function rangeKeyFromRecords(records) {
         if (!records.length) return 'unknown';
-        return `${records[0].pos}-${records[records.length - 1].pos}`;
+        const min = records[0].pos;
+        const bucket = CFG.RANGE_BUCKET;
+        const start = Math.floor((min - 1) / bucket) * bucket + 1;
+        const end = start + bucket - 1;
+        return `${start}-${end}`;
+    }
+
+    function rangeKeyFor(records) {
+        return rangeKeyFromFilter() || rangeKeyFromRecords(records);
     }
 
     function openDB() {
@@ -213,13 +253,18 @@
     async function createSnapshot(records, range) {
         const history = await getRangeHistory(range);
         const now = Date.now();
-        let compareSnap = null;
+        const lastVisit = history.length ? history[history.length - 1] : null;
+
+        let imageBaseline = null;
         for (let i = history.length - 1; i >= 0; i--) {
             if (now - history[i].ts >= CFG.MIN_INTERVAL_MS) {
-                compareSnap = history[i];
+                imageBaseline = history[i];
                 break;
             }
         }
+
+        const panelBaseline = lastVisit;
+
         const snapshot = {
             id: `${location.hostname}|${range}|${now}`,
             server: location.hostname,
@@ -227,16 +272,28 @@
             ts: now,
             title: `Comparativo ${fmtDateTime(now)}`,
             records,
-            baselineTs: compareSnap ? compareSnap.ts : null,
+            baselineTs: panelBaseline ? panelBaseline.ts : null,
             images: { comparison: null, panel: null },
             upload: { comparison: 'pending', panel: 'pending' }
         };
+
         await putSnapshot(snapshot);
         await trimHistory(range);
+
+        console.log('[MG Highscore]', {
+            host: location.hostname,
+            range,
+            jogadores: records.length,
+            historicoNaFaixa: history.length,
+            ultimaVisita: lastVisit ? fmtDateTime(lastVisit.ts) : null,
+            baselineImagens: imageBaseline ? fmtDateTime(imageBaseline.ts) : null
+        });
+
         return {
             snapshot,
-            compareSnap,
-            lastVisit: history.length ? history[history.length - 1] : null
+            compareSnap: panelBaseline,
+            imageBaseline,
+            lastVisit
         };
     }
 
@@ -523,12 +580,18 @@
             if (!currentState || isUploading) return;
             const statusEl = tools.querySelector('.mg-hs-tool-status');
             const btn = tools.querySelector('[data-tool="retry"]');
+            const baseline = currentState.imageBaseline || currentState.compareSnap;
+            if (!baseline) {
+                statusEl.textContent = 'Sem base para imagens';
+                statusEl.className = 'mg-hs-tool-status err';
+                return;
+            }
             try {
                 isUploading = true;
                 btn.disabled = true;
                 statusEl.textContent = 'Gerando imagens…';
                 statusEl.className = 'mg-hs-tool-status busy';
-                await generateAndUpload(currentState.snapshot, currentState.compareSnap);
+                await generateAndUpload(currentState.snapshot, baseline);
                 statusEl.textContent = '✓ Imagens atualizadas';
                 statusEl.className = 'mg-hs-tool-status ok';
             } catch (err) {
@@ -635,7 +698,7 @@
                 ${legendHtml}
                 <div class="mg-hs-empty">
                     Ainda coletando dados desta faixa.<br>
-                    Volte a esta mesma faixa daqui a pelo menos 1 hora para visualizar as mudanças.
+                    Volte a esta mesma localidade mais tarde para visualizar as mudanças.
                 </div>
             `;
         } else if (!topChanges.length) {
@@ -649,7 +712,7 @@
                         <button class="mg-hs-icon-btn" data-minimize title="Minimizar">${settings.minimized ? '＋' : '−'}</button>
                     </div>
                 </div>
-                <div class="mg-hs-lastvisit">🕓 Última visita: ${lastVisit ? fmtDateTime(lastVisit.ts) : '—'}</div>
+                <div class="mg-hs-lastvisit">🕓 Comparando com: ${fmtDateTime(compareSnap.ts)}</div>
                 ${legendHtml}
                 <div class="mg-hs-empty">Nenhuma mudança detectada nesta faixa desde a última comparação.</div>
             `;
@@ -1130,7 +1193,10 @@
         buildStyles();
 
         const records = parseHighscoreTable(table);
-        if (!records.length) return;
+        if (!records.length) {
+            console.warn('[MG Highscore] Tabela encontrada, mas nenhum jogador parseado.');
+            return;
+        }
 
         const range = rangeKeyFor(records);
         const state = await createSnapshot(records, range);
@@ -1139,7 +1205,7 @@
         renderPanel(table, range, state.compareSnap, state.lastVisit, records);
         createTools(table);
 
-        if (state.compareSnap) {
+        if (state.imageBaseline) {
             const statusEl = document.querySelector(`#${CFG.TOOLS_ID} .mg-hs-tool-status`);
             try {
                 isUploading = true;
@@ -1147,7 +1213,7 @@
                     statusEl.textContent = 'Gerando imagens…';
                     statusEl.className = 'mg-hs-tool-status busy';
                 }
-                await generateAndUpload(state.snapshot, state.compareSnap);
+                await generateAndUpload(state.snapshot, state.imageBaseline);
                 if (statusEl) {
                     statusEl.textContent = '✓ Imagens salvas';
                     statusEl.className = 'mg-hs-tool-status ok';
@@ -1163,6 +1229,12 @@
                 }
             } finally {
                 isUploading = false;
+            }
+        } else if (state.compareSnap) {
+            const statusEl = document.querySelector(`#${CFG.TOOLS_ID} .mg-hs-tool-status`);
+            if (statusEl) {
+                statusEl.textContent = 'Comparativo ok · imagens após 55 min';
+                statusEl.className = 'mg-hs-tool-status';
             }
         }
     }
